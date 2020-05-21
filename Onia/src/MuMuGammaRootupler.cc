@@ -109,7 +109,7 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		void fourMuonFit_bestYMass(pat::CompositeCandidate dimuonCand, RefCountedKinematicTree treeupsilon_part1, edm::Handle< edm::View<pat::Muon> > muons, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
 		int  fourMuonMixFit_bestYMass(pat::CompositeCandidate dimuonCand, edm::Handle< edm::View<pat::Muon> > muons, std::vector<pat::Muon> muons_previous, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
                //Stand Alone Function for YY
-                void YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons,edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs);
+                void YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons,edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
 		virtual void beginJob();
 		virtual void analyze(const edm::Event &, const edm::EventSetup &);
 		virtual void endJob();
@@ -197,8 +197,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		TLorentzVector dimuon_p4;
 		TLorentzVector mu1_p4;
 		TLorentzVector mu2_p4;
-		Int_t mu1Charge;
-		Int_t mu2Charge;
+                Float_t mu1charge;
+                Float_t mu2charge;
 		Float_t mu1_d0;
 		Float_t mu2_d0;
 		Float_t mu1_d0err;
@@ -280,6 +280,10 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> fourMuFit_VtxProb;
                 std::vector<Float_t> fourMuFit_ups1_VtxProb;
                 std::vector<Float_t> fourMuFit_ups2_VtxProb;
+                std::vector<Float_t> fourMuFit_ups1_mass;
+                std::vector<Float_t> fourMuFit_ups2_mass;
+                std::vector<Float_t> fourMuFit_ups1_massError;
+                std::vector<Float_t> fourMuFit_ups2_massError;
 		std::vector<Float_t> fourMuFit_Chi2;
 		std::vector<Int_t> fourMuFit_ndof;
 		std::vector<Float_t> fourMuFit_mu1Pt;
@@ -300,6 +304,14 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> fourMuFit_mu4E;
                 std::vector<Float_t> fourMuFit_mu3_trg_dR;
                 std::vector<Float_t> fourMuFit_mu4_trg_dR;
+                std::vector<Float_t> mu1_Pt;
+                std::vector<Float_t> mu1_Eta;
+                std::vector<Float_t> mu1_Phi;
+                std::vector<Float_t> mu1_E;
+                std::vector<Float_t> mu2_Pt;
+                std::vector<Float_t> mu2_Eta;
+                std::vector<Float_t> mu2_Phi;
+                std::vector<Float_t> mu2_E;
 		std::vector<Float_t> mu3_Pt;
 		std::vector<Float_t> mu3_Eta;
 		std::vector<Float_t> mu3_Phi;
@@ -308,6 +320,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> mu4_Eta;
 		std::vector<Float_t> mu4_Phi;
 		std::vector<Float_t> mu4_E;
+                std::vector<Int_t> mu1Charge;
+                std::vector<Int_t> mu2Charge;
 		std::vector<Int_t> mu3Charge;
 		std::vector<Int_t> mu4Charge;
 		std::vector<Float_t> mu3_d0;
@@ -583,8 +597,8 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("mu2_filtersMatched", & mu2_filtersMatched);
 		onia_tree->Branch("mu1_p4",  "TLorentzVector", &mu1_p4);
 		onia_tree->Branch("mu2_p4",  "TLorentzVector", &mu2_p4);
-		onia_tree->Branch("mu1Charge",   &mu1Charge,    "mu1Charge/I");
-		onia_tree->Branch("mu2Charge",   &mu2Charge,    "mu2Charge/I");
+		onia_tree->Branch("mu1charge",   &mu1charge,    "mu1charge/I");
+		onia_tree->Branch("mu2charge",   &mu2charge,    "mu2charge/I");
 		onia_tree->Branch("mu1_d0",   &mu1_d0,    "mu1_d0/F");
 		onia_tree->Branch("mu1_d0err",   &mu1_d0err,    "mu1_d0err/F");
 		onia_tree->Branch("mu2_d0",   &mu2_d0,    "mu2_d0/F");
@@ -668,6 +682,10 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("fourMuFit_VtxProb",&fourMuFit_VtxProb);
                 onia_tree->Branch("fourMuFit_ups1_VtxProb",&fourMuFit_ups1_VtxProb);
                 onia_tree->Branch("fourMuFit_ups2_VtxProb",&fourMuFit_ups2_VtxProb);
+                onia_tree->Branch("fourMuFit_ups1_mass",&fourMuFit_ups1_mass);
+                onia_tree->Branch("fourMuFit_ups2_mass",&fourMuFit_ups2_mass);
+                onia_tree->Branch("fourMuFit_ups1_massError",&fourMuFit_ups1_massError);
+                onia_tree->Branch("fourMuFit_ups2_massError",&fourMuFit_ups2_massError);
 		onia_tree->Branch("fourMuFit_Chi2",&fourMuFit_Chi2);
 		onia_tree->Branch("fourMuFit_ndof",&fourMuFit_ndof);
 		onia_tree->Branch("fourMuFit_mu1Pt",&fourMuFit_mu1Pt);
@@ -688,15 +706,25 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("fourMuFit_mu4E",&fourMuFit_mu4E);
                 onia_tree->Branch("fourMuFit_mu3_trg_dR",&fourMuFit_mu3_trg_dR);
                 onia_tree->Branch("fourMuFit_mu4_trg_dR",&fourMuFit_mu4_trg_dR);
+                onia_tree->Branch("mu1_Pt",   &mu1_Pt);
+                onia_tree->Branch("mu1_Eta",  &mu1_Eta);
+                onia_tree->Branch("mu1_Phi",  &mu1_Phi);
+                onia_tree->Branch("mu1_E",    &mu1_E);
+                onia_tree->Branch("mu2_Pt",   &mu2_Pt);
+                onia_tree->Branch("mu2_Eta",  &mu2_Eta);
+                onia_tree->Branch("mu2_Phi",  &mu2_Phi);
+                onia_tree->Branch("mu2_E",    &mu2_E);
 		onia_tree->Branch("mu3_Pt",   &mu3_Pt);
-		onia_tree->Branch("mu3_Eta",   &mu3_Eta);
-		onia_tree->Branch("mu3_Phi",   &mu3_Phi);
-		onia_tree->Branch("mu3_E",   &mu3_E);
+		onia_tree->Branch("mu3_Eta",  &mu3_Eta);
+		onia_tree->Branch("mu3_Phi",  &mu3_Phi);
+		onia_tree->Branch("mu3_E",    &mu3_E);
 		onia_tree->Branch("mu4_Pt",   &mu4_Pt);
-		onia_tree->Branch("mu4_Eta",   &mu4_Eta);
-		onia_tree->Branch("mu4_Phi",   &mu4_Phi);
-		onia_tree->Branch("mu4_E",   &mu4_E);
-		onia_tree->Branch("mu3Charge",   &mu3Charge);
+		onia_tree->Branch("mu4_Eta",  &mu4_Eta);
+		onia_tree->Branch("mu4_Phi",  &mu4_Phi);
+		onia_tree->Branch("mu4_E",    &mu4_E);
+                onia_tree->Branch("mu1Charge", &mu1Charge);
+                onia_tree->Branch("mu2Charge",   &mu2Charge);
+		onia_tree->Branch("mu3Charge", &mu3Charge);
 		onia_tree->Branch("mu4Charge",   &mu4Charge);
 		onia_tree->Branch("mu3_d0",   &mu3_d0);
 		onia_tree->Branch("mu3_d0err",   &mu3_d0err);
@@ -1586,8 +1614,8 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	dimuon_p4.SetPtEtaPhiM(0,0,0,0);
 	mu1_p4.SetPtEtaPhiM(0,0,0,0);
 	mu2_p4.SetPtEtaPhiM(0,0,0,0);
-	mu1Charge = -10; 
-	mu2Charge = -10; 
+	mu1charge = -10; 
+	mu2charge = -10; 
 	mu1_d0 = -10; 
 	mu1_d0err = -10; 
 	mu2_d0 = -10; 
@@ -1672,6 +1700,10 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	fourMuFit_VtxProb.clear();
         fourMuFit_ups1_VtxProb.clear();
         fourMuFit_ups2_VtxProb.clear();
+        fourMuFit_ups1_mass.clear();
+        fourMuFit_ups2_mass.clear();
+        fourMuFit_ups1_massError.clear();
+        fourMuFit_ups2_massError.clear();
 	fourMuFit_Chi2.clear();
 	fourMuFit_ndof.clear();
 	fourMuFit_mu1Pt.clear();
@@ -1692,6 +1724,14 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	fourMuFit_mu4E.clear();
         fourMuFit_mu3_trg_dR.clear();
         fourMuFit_mu4_trg_dR.clear();
+        mu1_Pt.clear();
+        mu1_Eta.clear();
+        mu1_Phi.clear();
+        mu1_E.clear();
+        mu2_Pt.clear();
+        mu2_Eta.clear();
+        mu2_Phi.clear();
+        mu2_E.clear();
 	mu3_Pt.clear();
 	mu3_Eta.clear();
 	mu3_Phi.clear();
@@ -2011,7 +2051,7 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
         if (! OnlyGen_ && run_YY_SAF_)
         {
           //fourMuonFit(thisDimuonCand, tree_ups_part1, muons, bFieldHandle, bs, thePrimaryV);
-          YY_fourMuonFit(muons, bFieldHandle, bs); 
+          YY_fourMuonFit(muons, bFieldHandle, bs, thePrimaryV); 
          }
     
 
@@ -2143,8 +2183,8 @@ void  MuMuGammaRootupler::fillUpsilonBestVertex(RefCountedKinematicTree mumuVert
 	reco::Candidate::LorentzVector vM = dimuonCand.daughter("muon2")->p4();
 	mu1_p4.SetPtEtaPhiM(vP.pt(), vP.eta(), vP.phi(), vP.mass());
 	mu2_p4.SetPtEtaPhiM(vM.pt(), vM.eta(), vM.phi(), vM.mass());
-	mu1Charge = dimuonCand.daughter("muon1")->charge();
-	mu2Charge = dimuonCand.daughter("muon2")->charge();
+	mu1charge = dimuonCand.daughter("muon1")->charge();
+	mu2charge = dimuonCand.daughter("muon2")->charge();
 
 	reco::TrackRef muTrack1_ref = ( dynamic_cast<const pat::Muon*>(dimuonCand.daughter("muon1") ) )->innerTrack();
 	reco::TrackRef muTrack2_ref = ( dynamic_cast<const pat::Muon*>(dimuonCand.daughter("muon2") ) )->innerTrack();
@@ -2512,7 +2552,7 @@ int MuMuGammaRootupler::fourMuonMixFit(pat::CompositeCandidate dimuonCand, edm::
 	}
 	return nGoodFourMuonMix;
 }
-void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons,edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs){
+void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV){
     std::vector<pat::Muon> AllMuons;
     vector<RefCountedKinematicTree> Chi;
     vector<RefCountedKinematicParticle> Chi_1;
@@ -2669,6 +2709,10 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_VtxProb.push_back(ChiSquaredProbability((double)(FourMuDecayVertex->chiSquared()),(double)(FourMuDecayVertex->degreesOfFreedom())));
            fourMuFit_ups1_VtxProb.push_back(v_mumufit_VtxCL[i]);
            fourMuFit_ups2_VtxProb.push_back(v_mumufit_VtxCL[j]);
+           fourMuFit_ups1_mass.push_back(upsilon_part1->currentState().mass());
+           fourMuFit_ups2_mass.push_back(upsilon_part2->currentState().mass());
+           fourMuFit_ups1_massError.push_back(sqrt(upsilon_part1->currentState().kinematicParametersError().matrix()(6,6)));
+           fourMuFit_ups2_massError.push_back(sqrt(upsilon_part2->currentState().kinematicParametersError().matrix()(6,6)));
            fourMuFit_Chi2.push_back(FourMuDecayVertex->chiSquared());
            fourMuFit_ndof.push_back(FourMuDecayVertex->degreesOfFreedom());
            //get first muon //Childs are taken from JPsi 1 and 2
@@ -2711,6 +2755,39 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_mu4Phi.push_back(p4.Phi());
            fourMuFit_mu4E.push_back(p4.E());
            if (verbose) cout<<"post Fit mu4pt: "<<p4.Pt()<<"mu4eta: "<<p4.Eta()<<"mu4phi: "<<p4.Phi()<<"mu4E: "<<p4.E()<<endl;
+           mu1_Pt.push_back(AllMuons[i1].pt());
+           mu2_Pt.push_back(AllMuons[i2].pt());
+           mu3_Pt.push_back(AllMuons[j1].pt());
+           mu4_Pt.push_back(AllMuons[j2].pt());
+           mu1_Eta.push_back(AllMuons[i1].eta());
+           mu2_Eta.push_back(AllMuons[i2].eta());
+           mu3_Eta.push_back(AllMuons[j1].eta());
+           mu4_Eta.push_back(AllMuons[j2].eta());
+           mu1_Phi.push_back(AllMuons[i1].phi());
+           mu2_Phi.push_back(AllMuons[i2].phi());
+           mu3_Phi.push_back(AllMuons[j1].phi());
+           mu4_Phi.push_back(AllMuons[j2].phi());
+           mu1_E.push_back(AllMuons[i1].energy());
+           mu2_E.push_back(AllMuons[i2].energy());
+           mu3_E.push_back(AllMuons[j1].energy());
+           mu4_E.push_back(AllMuons[j2].energy());
+           mu1Charge.push_back(AllMuons[i1].charge());
+           mu2Charge.push_back(AllMuons[i2].charge());
+           mu3Charge.push_back(AllMuons[j1].charge());
+           mu4Charge.push_back(AllMuons[j2].charge());
+
+           mu1_Tight.push_back(muon::isTightMuon(AllMuons[i1], thePrimaryV));
+           mu2_Tight.push_back(muon::isTightMuon(AllMuons[i2], thePrimaryV));
+           mu3_Tight.push_back(muon::isTightMuon(AllMuons[j1], thePrimaryV));
+           mu4_Tight.push_back(muon::isTightMuon(AllMuons[j2], thePrimaryV));
+           mu1_Medium.push_back(muon::isMediumMuon(AllMuons[i1]));
+           mu2_Medium.push_back(muon::isMediumMuon(AllMuons[i2]));
+           mu3_Medium.push_back(muon::isMediumMuon(AllMuons[j1]));
+           mu4_Medium.push_back(muon::isMediumMuon(AllMuons[j2]));
+           mu1_Loose.push_back(muon::isLooseMuon(AllMuons[i1]));
+           mu2_Loose.push_back(muon::isLooseMuon(AllMuons[i2]));
+           mu3_Loose.push_back(muon::isLooseMuon(AllMuons[j1]));
+           mu4_Loose.push_back(muon::isLooseMuon(AllMuons[j2]));
         }// Loop2 over UPS candidates
     } // Loop1 over UPS candidates
 } //end Stand Alone YY Fucntion

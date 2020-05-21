@@ -24,7 +24,7 @@ process.source = cms.Source("PoolSource",
 
 
 process.TFileService = cms.Service("TFileService",
-        fileName = cms.string('Rootuple_Run2016_v3.root'),
+        fileName = cms.string('Rootuple_Run2016_v2.root'),
 )
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
