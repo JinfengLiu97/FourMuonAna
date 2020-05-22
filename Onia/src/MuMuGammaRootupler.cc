@@ -284,6 +284,10 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
                 std::vector<Float_t> fourMuFit_ups2_mass;
                 std::vector<Float_t> fourMuFit_ups1_massError;
                 std::vector<Float_t> fourMuFit_ups2_massError;
+                std::vector<Float_t> fourMuFit_wrong_ups1_mass;
+                std::vector<Float_t> fourMuFit_wrong_ups2_mass;
+                std::vector<Float_t> fourMuFit_wrong_ups1_massError;
+                std::vector<Float_t> fourMuFit_wrong_ups2_massError;
 		std::vector<Float_t> fourMuFit_Chi2;
 		std::vector<Int_t> fourMuFit_ndof;
 		std::vector<Float_t> fourMuFit_mu1Pt;
@@ -686,6 +690,10 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("fourMuFit_ups2_mass",&fourMuFit_ups2_mass);
                 onia_tree->Branch("fourMuFit_ups1_massError",&fourMuFit_ups1_massError);
                 onia_tree->Branch("fourMuFit_ups2_massError",&fourMuFit_ups2_massError);
+                onia_tree->Branch("fourMuFit_wrong_ups1_mass",&fourMuFit_wrong_ups1_mass);
+                onia_tree->Branch("fourMuFit_wrong_ups2_mass",&fourMuFit_wrong_ups2_mass);
+                onia_tree->Branch("fourMuFit_wrong_ups1_massError",&fourMuFit_wrong_ups1_massError);
+                onia_tree->Branch("fourMuFit_wrong_ups2_massError",&fourMuFit_wrong_ups2_massError);
 		onia_tree->Branch("fourMuFit_Chi2",&fourMuFit_Chi2);
 		onia_tree->Branch("fourMuFit_ndof",&fourMuFit_ndof);
 		onia_tree->Branch("fourMuFit_mu1Pt",&fourMuFit_mu1Pt);
@@ -1704,7 +1712,10 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
         fourMuFit_ups2_mass.clear();
         fourMuFit_ups1_massError.clear();
         fourMuFit_ups2_massError.clear();
-	fourMuFit_Chi2.clear();
+        fourMuFit_wrong_ups1_mass.clear();
+        fourMuFit_wrong_ups2_mass.clear();
+        fourMuFit_wrong_ups1_massError.clear();
+        fourMuFit_wrong_ups2_massError.clear();
 	fourMuFit_ndof.clear();
 	fourMuFit_mu1Pt.clear();
 	fourMuFit_mu1Eta.clear();
@@ -2694,12 +2705,55 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuTree = Fitter.fit(Chi_1); //Two body (upsilon) Fit to get fourmu mass
            if(fourMuTree->isEmpty()) continue;
            if(!fourMuTree->isValid()) continue;
+           fourMuTree->movePointerToTheTop();
            fitFourMu = fourMuTree->currentParticle();
            if (verbose) cout<<"Four muon mass from two jpsi constrainted Fit: "<<fitFourMu->currentState().mass()<<endl;
            fourMuFit_Mass.push_back(fitFourMu->currentState().mass());
            fourMuFit_MassErr.push_back(sqrt(fitFourMu->currentState().kinematicParametersError().matrix()(6,6)));
            TLorentzVector p4;
            p4.SetXYZM(fitFourMu->currentState().kinematicParameters().momentum().x(),fitFourMu->currentState().kinematicParameters().momentum().y(),fitFourMu->currentState().kinematicParameters().momentum().z(),fitFourMu->currentState().mass());
+           // mass and mass error of wrong unselected combination, to be used to veto known resonaces 
+            KinematicParticleFactoryFromTransientTrack a_MuMuFactory;
+            KinematicParticleFactoryFromTransientTrack b_MuMuFactory;
+            std::vector<RefCountedKinematicParticle> a_MuMuParticles;
+            std::vector<RefCountedKinematicParticle> b_MuMuParticles;
+            float a_wrongcomb_mass = -1.0;
+            float a_wrongcomb_mass_Error = -1.0;
+            float b_wrongcomb_mass = -1.0;
+            float b_wrongcomb_mass_Error = -1.0;
+            if (AllMuons[i1].charge()==AllMuons[j1].charge())
+            {
+             a_MuMuParticles.push_back(a_MuMuFactory.particle (muon1TT, muonMass, float(0), float(0), muonSigma));
+             a_MuMuParticles.push_back(a_MuMuFactory.particle (muon4TT, muonMass, float(0), float(0), muonSigma));
+             b_MuMuParticles.push_back(b_MuMuFactory.particle (muon2TT, muonMass, float(0), float(0), muonSigma));
+             b_MuMuParticles.push_back(b_MuMuFactory.particle (muon3TT, muonMass, float(0), float(0), muonSigma));
+             }
+            else
+              {
+             a_MuMuParticles.push_back(a_MuMuFactory.particle (muon1TT, muonMass, float(0), float(0), muonSigma));
+             a_MuMuParticles.push_back(a_MuMuFactory.particle (muon3TT, muonMass, float(0), float(0), muonSigma));
+             b_MuMuParticles.push_back(b_MuMuFactory.particle (muon2TT, muonMass, float(0), float(0), muonSigma));
+             b_MuMuParticles.push_back(b_MuMuFactory.particle (muon4TT, muonMass, float(0), float(0), muonSigma));
+                }
+            KinematicParticleVertexFitter  a_Fitter;
+            RefCountedKinematicTree a_MuMuTree = a_Fitter.fit(a_MuMuParticles);
+            if (!(a_MuMuTree->isEmpty()))
+            {
+             a_MuMuTree->movePointerToTheTop();
+             RefCountedKinematicParticle a_MuMu = a_MuMuTree->currentParticle();
+             a_wrongcomb_mass = a_MuMu->currentState().mass();
+             a_wrongcomb_mass_Error = sqrt(a_MuMu->currentState().kinematicParametersError().matrix()(6,6));
+             }
+            KinematicParticleVertexFitter  b_Fitter;
+            RefCountedKinematicTree b_MuMuTree = b_Fitter.fit(b_MuMuParticles);
+            if (!(b_MuMuTree->isEmpty()))
+            {
+             b_MuMuTree->movePointerToTheTop();
+             RefCountedKinematicParticle b_MuMu = b_MuMuTree->currentParticle();
+             b_wrongcomb_mass = b_MuMu->currentState().mass();
+             b_wrongcomb_mass_Error = sqrt(b_MuMu->currentState().kinematicParametersError().matrix()(6,6));
+             }           
+           // finished, mass and mass error of wrong unselected combination
            fourMuFit_Pt.push_back(p4.Pt());
            fourMuFit_Eta.push_back(p4.Eta());
            fourMuFit_Phi.push_back(p4.Phi());
@@ -2715,6 +2769,11 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_ups2_massError.push_back(sqrt(upsilon_part2->currentState().kinematicParametersError().matrix()(6,6)));
            fourMuFit_Chi2.push_back(FourMuDecayVertex->chiSquared());
            fourMuFit_ndof.push_back(FourMuDecayVertex->degreesOfFreedom());
+           // wrong combination
+           fourMuFit_wrong_ups1_mass.push_back(a_wrongcomb_mass);
+           fourMuFit_wrong_ups2_mass.push_back(b_wrongcomb_mass);
+           fourMuFit_wrong_ups1_massError.push_back(a_wrongcomb_mass_Error);
+           fourMuFit_wrong_ups2_massError.push_back(b_wrongcomb_mass_Error);
            //get first muon //Childs are taken from JPsi 1 and 2
            bool child = treeupsilon_part1->movePointerToTheFirstChild();
            RefCountedKinematicParticle fitMu1 = treeupsilon_part1->currentParticle();
