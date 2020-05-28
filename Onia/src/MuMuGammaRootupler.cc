@@ -352,7 +352,18 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Int_t> mu2_pdgID;
 		std::vector<Int_t> mu3_pdgID;
 		std::vector<Int_t> mu4_pdgID;
-
+                std::vector<Int_t> fourMuFit_mu12overlap;
+                std::vector<Int_t> fourMuFit_mu13overlap;
+                std::vector<Int_t> fourMuFit_mu14overlap;
+                std::vector<Int_t> fourMuFit_mu23overlap;
+                std::vector<Int_t> fourMuFit_mu24overlap;
+                std::vector<Int_t> fourMuFit_mu34overlap;
+                std::vector<Int_t> fourMuFit_mu12SharedSeg;
+                std::vector<Int_t> fourMuFit_mu13SharedSeg;
+                std::vector<Int_t> fourMuFit_mu14SharedSeg;
+                std::vector<Int_t> fourMuFit_mu23SharedSeg;
+                std::vector<Int_t> fourMuFit_mu24SharedSeg;
+                std::vector<Int_t> fourMuFit_mu34SharedSeg;
 		/*
 			std::vector<Float_t> fourMuFit_Mass_allComb;
 			Float_t fourMuFit_Mass;
@@ -758,7 +769,18 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("mu2_pdgID",   &mu2_pdgID);
 		onia_tree->Branch("mu3_pdgID",   &mu3_pdgID);
 		onia_tree->Branch("mu4_pdgID",   &mu4_pdgID);
-
+                onia_tree->Branch("fourMuFit_mu12overlap", &fourMuFit_mu12overlap);
+                onia_tree->Branch("fourMuFit_mu13overlap", &fourMuFit_mu13overlap);
+                onia_tree->Branch("fourMuFit_mu14overlap", &fourMuFit_mu14overlap);
+                onia_tree->Branch("fourMuFit_mu23overlap", &fourMuFit_mu23overlap);
+                onia_tree->Branch("fourMuFit_mu24overlap", &fourMuFit_mu24overlap);
+                onia_tree->Branch("fourMuFit_mu34overlap", &fourMuFit_mu34overlap);
+                onia_tree->Branch("fourMuFit_mu12SharedSeg", &fourMuFit_mu12SharedSeg);
+                onia_tree->Branch("fourMuFit_mu13SharedSeg", &fourMuFit_mu13SharedSeg);
+                onia_tree->Branch("fourMuFit_mu14SharedSeg", &fourMuFit_mu14SharedSeg);
+                onia_tree->Branch("fourMuFit_mu23SharedSeg", &fourMuFit_mu23SharedSeg);
+                onia_tree->Branch("fourMuFit_mu24SharedSeg", &fourMuFit_mu24SharedSeg);
+                onia_tree->Branch("fourMuFit_mu34SharedSeg", &fourMuFit_mu34SharedSeg);
 		/*
 			onia_tree->Branch("fourMuFit_Mass_allComb",&fourMuFit_Mass_allComb);
 			onia_tree->Branch("fourMuFit_Mass",&fourMuFit_Mass,"fourMuFit_Mass/F");
@@ -1777,6 +1799,18 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	mu2_pdgID.clear();
 	mu3_pdgID.clear();
 	mu4_pdgID.clear();
+        fourMuFit_mu12overlap.clear();
+        fourMuFit_mu13overlap.clear();
+        fourMuFit_mu14overlap.clear();
+        fourMuFit_mu23overlap.clear();
+        fourMuFit_mu24overlap.clear();
+        fourMuFit_mu34overlap.clear();
+        fourMuFit_mu12SharedSeg.clear();
+        fourMuFit_mu13SharedSeg.clear();
+        fourMuFit_mu14SharedSeg.clear();
+        fourMuFit_mu23SharedSeg.clear();
+        fourMuFit_mu24SharedSeg.clear();
+        fourMuFit_mu34SharedSeg.clear();
 
 	/*
 		fourMuFit_Mass_allComb.clear();
@@ -2847,6 +2881,20 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            mu2_Loose.push_back(muon::isLooseMuon(AllMuons[i2]));
            mu3_Loose.push_back(muon::isLooseMuon(AllMuons[j1]));
            mu4_Loose.push_back(muon::isLooseMuon(AllMuons[j2]));
+           // Branches for check overlaping muons
+           fourMuFit_mu12overlap.push_back( muon::overlap(AllMuons[i1], AllMuons[i2]) );
+           fourMuFit_mu13overlap.push_back( muon::overlap(AllMuons[i1], AllMuons[j1]) );
+           fourMuFit_mu14overlap.push_back( muon::overlap(AllMuons[i1], AllMuons[j2]) );
+           fourMuFit_mu23overlap.push_back( muon::overlap(AllMuons[i2], AllMuons[j1]) );
+           fourMuFit_mu24overlap.push_back( muon::overlap(AllMuons[i2], AllMuons[j2]) );
+           fourMuFit_mu34overlap.push_back( muon::overlap(AllMuons[j1], AllMuons[j2]) );
+           fourMuFit_mu12SharedSeg.push_back(  muon::sharedSegments(AllMuons[i1], AllMuons[i2]) );
+           fourMuFit_mu13SharedSeg.push_back(  muon::sharedSegments(AllMuons[i1], AllMuons[j1]) );
+           fourMuFit_mu14SharedSeg.push_back(  muon::sharedSegments(AllMuons[i1], AllMuons[j2]) );
+           fourMuFit_mu23SharedSeg.push_back(  muon::sharedSegments(AllMuons[i2], AllMuons[j1]) );
+           fourMuFit_mu24SharedSeg.push_back(  muon::sharedSegments(AllMuons[i2], AllMuons[j2]) );
+           fourMuFit_mu34SharedSeg.push_back(  muon::sharedSegments(AllMuons[j1], AllMuons[j2]) );
+          
         }// Loop2 over UPS candidates
     } // Loop1 over UPS candidates
 } //end Stand Alone YY Fucntion
