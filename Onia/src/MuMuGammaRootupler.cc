@@ -2636,7 +2636,12 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
             KinematicParticleVertexFitter mumufitter;
             RefCountedKinematicTree mumuVertexFitTree;
             KinematicParticleFitter csFitter;
-            mumuVertexFitTree = mumufitter.fit(mumuParticles);
+
+            try{mumuVertexFitTree = mumufitter.fit(mumuParticles);}
+            catch (...) {
+            std::cout<<"dimu fit: PerigeeKinematicState::kinematic state passed is not valid!"<<std::endl;
+            continue;
+            }
             if (!(mumuVertexFitTree->isValid())) continue;
             if (verbose) cout<<"This dimuon candidate has valid vertex fit"<<endl;
             mumuVertexFitTree = csFitter.fit(ups_c, mumuVertexFitTree);
@@ -2722,7 +2727,11 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
             RefCountedKinematicTree fourMuTree = Fitter.fit(fourMuParticles);
             if(fourMuTree->isEmpty()) continue;
             fourMuTree->movePointerToTheTop();
-            RefCountedKinematicParticle fitFourMu = fourMuTree->currentParticle();
+            try{RefCountedKinematicParticle fitFourMu = fourMuTree->currentParticle();}
+            catch (...) {
+            std::cout<<"4mu fit: PerigeeKinematicState::kinematic state passed is not valid!"<<std::endl;
+            continue;
+            }
             RefCountedKinematicVertex FourMuDecayVertex = fourMuTree->currentDecayVertex();
             if (!(fitFourMu->currentState().isValid())) continue;
             if (verbose) cout<<"Four muon mass: "<<fitFourMu->currentState().mass()<<endl;
