@@ -278,6 +278,7 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> fourMuFit_VtxY;
 		std::vector<Float_t> fourMuFit_VtxZ;
 		std::vector<Float_t> fourMuFit_VtxProb;
+                std::vector<Float_t> fourMuFit_Double_ups_VtxProb;
                 std::vector<Float_t> fourMuFit_ups1_VtxProb;
                 std::vector<Float_t> fourMuFit_ups2_VtxProb;
                 std::vector<Float_t> fourMuFit_ups1_mass;
@@ -290,6 +291,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
                 std::vector<Float_t> fourMuFit_wrong_ups2_massError;
 		std::vector<Float_t> fourMuFit_Chi2;
 		std::vector<Int_t> fourMuFit_ndof;
+                std::vector<Float_t> fourMuFit_Double_ups_Chi2;
+                std::vector<Int_t> fourMuFit_Double_ups_ndof;
 		std::vector<Float_t> fourMuFit_mu1Pt;
 		std::vector<Float_t> fourMuFit_mu1Eta;
 		std::vector<Float_t> fourMuFit_mu1Phi;
@@ -695,6 +698,7 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("fourMuFit_VtxY",&fourMuFit_VtxY);
 		onia_tree->Branch("fourMuFit_VtxZ",&fourMuFit_VtxZ);
 		onia_tree->Branch("fourMuFit_VtxProb",&fourMuFit_VtxProb);
+                onia_tree->Branch("fourMuFit_Double_ups_VtxProb",&fourMuFit_Double_ups_VtxProb);
                 onia_tree->Branch("fourMuFit_ups1_VtxProb",&fourMuFit_ups1_VtxProb);
                 onia_tree->Branch("fourMuFit_ups2_VtxProb",&fourMuFit_ups2_VtxProb);
                 onia_tree->Branch("fourMuFit_ups1_mass",&fourMuFit_ups1_mass);
@@ -707,6 +711,8 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("fourMuFit_wrong_ups2_massError",&fourMuFit_wrong_ups2_massError);
 		onia_tree->Branch("fourMuFit_Chi2",&fourMuFit_Chi2);
 		onia_tree->Branch("fourMuFit_ndof",&fourMuFit_ndof);
+                onia_tree->Branch("fourMuFit_Double_ups_Chi2",&fourMuFit_Double_ups_Chi2);
+                onia_tree->Branch("fourMuFit_Double_ups_ndof",&fourMuFit_Double_ups_ndof);            
 		onia_tree->Branch("fourMuFit_mu1Pt",&fourMuFit_mu1Pt);
 		onia_tree->Branch("fourMuFit_mu1Eta",&fourMuFit_mu1Eta);
 		onia_tree->Branch("fourMuFit_mu1Phi",&fourMuFit_mu1Phi);
@@ -1728,6 +1734,7 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	fourMuFit_VtxY.clear();
 	fourMuFit_VtxZ.clear();
 	fourMuFit_VtxProb.clear();
+        fourMuFit_Double_ups_VtxProb.clear();
         fourMuFit_ups1_VtxProb.clear();
         fourMuFit_ups2_VtxProb.clear();
         fourMuFit_ups1_mass.clear();
@@ -2751,6 +2758,9 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            if(!fourMuTree->isValid()) continue;
            fourMuTree->movePointerToTheTop();
            fitFourMu = fourMuTree->currentParticle();
+           RefCountedKinematicVertex Double_ups_DecayVertex = fourMuTree->currentDecayVertex();
+           if (!(fitFourMu->currentState().isValid())) continue;
+           if (verbose) cout<<"Double ups vertex probabilty: "<<ChiSquaredProbability((double)(Double_ups_DecayVertex->chiSquared()),(double)(Double_ups_DecayVertex->degreesOfFreedom()))<<endl;
            if (verbose) cout<<"Four muon mass from two jpsi constrainted Fit: "<<fitFourMu->currentState().mass()<<endl;
            fourMuFit_Mass.push_back(fitFourMu->currentState().mass());
            fourMuFit_MassErr.push_back(sqrt(fitFourMu->currentState().kinematicParametersError().matrix()(6,6)));
@@ -2805,6 +2815,7 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_VtxY.push_back(FourMuDecayVertex->position().y());
            fourMuFit_VtxZ.push_back(FourMuDecayVertex->position().z());
            fourMuFit_VtxProb.push_back(ChiSquaredProbability((double)(FourMuDecayVertex->chiSquared()),(double)(FourMuDecayVertex->degreesOfFreedom())));
+           fourMuFit_Double_ups_VtxProb.push_back(ChiSquaredProbability((double)(Double_ups_DecayVertex->chiSquared()),(double)(Double_ups_DecayVertex->degreesOfFreedom())));
            fourMuFit_ups1_VtxProb.push_back(v_mumufit_VtxCL[i]);
            fourMuFit_ups2_VtxProb.push_back(v_mumufit_VtxCL[j]);
            fourMuFit_ups1_mass.push_back(upsilon_part1->currentState().mass());
@@ -2813,6 +2824,8 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_ups2_massError.push_back(sqrt(upsilon_part2->currentState().kinematicParametersError().matrix()(6,6)));
            fourMuFit_Chi2.push_back(FourMuDecayVertex->chiSquared());
            fourMuFit_ndof.push_back(FourMuDecayVertex->degreesOfFreedom());
+           fourMuFit_Double_ups_Chi2.push_back(Double_ups_DecayVertex->chiSquared());
+           fourMuFit_Double_ups_ndof.push_back(Double_ups_DecayVertex->degreesOfFreedom());
            // wrong combination
            fourMuFit_wrong_ups1_mass.push_back(a_wrongcomb_mass);
            fourMuFit_wrong_ups2_mass.push_back(b_wrongcomb_mass);
