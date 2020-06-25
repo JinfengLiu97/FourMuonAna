@@ -339,6 +339,10 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> mu4_dz;
 		std::vector<Float_t> mu3_dzerr;
 		std::vector<Float_t> mu4_dzerr;
+                std::vector<Int_t> mu1_Soft;
+                std::vector<Int_t> mu2_Soft;
+                std::vector<Int_t> mu3_Soft;
+                std::vector<Int_t> mu4_Soft;
 		std::vector<Int_t> mu1_Tight;
 		std::vector<Int_t> mu2_Tight;
 		std::vector<Int_t> mu3_Tight;
@@ -759,6 +763,10 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("mu3_dzerr",   &mu3_dzerr);
 		onia_tree->Branch("mu4_dz",   &mu4_dz);
 		onia_tree->Branch("mu4_dzerr",   &mu4_dzerr);
+                onia_tree->Branch("mu1_Soft",   &mu1_Soft);
+                onia_tree->Branch("mu2_Soft",   &mu2_Soft);
+                onia_tree->Branch("mu3_Soft",   &mu3_Soft);
+                onia_tree->Branch("mu4_Soft",   &mu4_Soft);
 		onia_tree->Branch("mu1_Tight",   &mu1_Tight);
 		onia_tree->Branch("mu2_Tight",   &mu2_Tight);
 		onia_tree->Branch("mu3_Tight",   &mu3_Tight);
@@ -1790,10 +1798,14 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	mu4_dzerr.clear();
 	mu3Charge.clear();
 	mu4Charge.clear();
-	mu1_Tight.clear();
-	mu2_Tight.clear();
-	mu3_Tight.clear();
-	mu4_Tight.clear();
+	mu1_Soft.clear();
+	mu2_Soft.clear();
+	mu3_Soft.clear();
+	mu4_Soft.clear();
+        mu1_Tight.clear();
+        mu2_Tight.clear();
+        mu3_Tight.clear();
+        mu4_Tight.clear();
 	mu1_Medium.clear();
 	mu2_Medium.clear();
 	mu3_Medium.clear();
@@ -2892,6 +2904,10 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            mu3Charge.push_back(AllMuons[j1].charge());
            mu4Charge.push_back(AllMuons[j2].charge());
 
+           mu1_Soft.push_back(muon::isSoftMuon(AllMuons[i1], thePrimaryV));
+           mu2_Soft.push_back(muon::isSoftMuon(AllMuons[i2], thePrimaryV));
+           mu3_Soft.push_back(muon::isSoftMuon(AllMuons[j1], thePrimaryV));
+           mu4_Soft.push_back(muon::isSoftMuon(AllMuons[j2], thePrimaryV));
            mu1_Tight.push_back(muon::isTightMuon(AllMuons[i1], thePrimaryV));
            mu2_Tight.push_back(muon::isTightMuon(AllMuons[i2], thePrimaryV));
            mu3_Tight.push_back(muon::isTightMuon(AllMuons[j1], thePrimaryV));
