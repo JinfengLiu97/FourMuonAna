@@ -21,6 +21,7 @@
 
 #include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 //#include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -62,6 +63,8 @@
 #include "TLorentzVector.h"
 #include "TTree.h"
 #include "TH2F.h"
+//GEN
+#include "FourMuonAna/Onia/interface/HZZ4LGENAna.h"
 
 using namespace std;
 using namespace edm;
@@ -110,6 +113,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		int  fourMuonMixFit_bestYMass(pat::CompositeCandidate dimuonCand, edm::Handle< edm::View<pat::Muon> > muons, std::vector<pat::Muon> muons_previous, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
                //Stand Alone Function for YY
                 void YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons,edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
+                //void setGENVariables(edm::Handle<reco::GenParticleCollection> prunedgenParticles, edm::Handle<pat::PackedGenParticle> packedgenParticles);
+                void setGENVariables(edm::Handle<reco::GenParticleCollection> prunedgenParticles);
 		virtual void beginJob();
 		virtual void analyze(const edm::Event &, const edm::EventSetup &);
 		virtual void endJob();
@@ -118,7 +123,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		virtual void endRun(edm::Run const &, edm::EventSetup const &);
 		virtual void beginLuminosityBlock(edm::LuminosityBlock const &, edm::EventSetup const &);
 		virtual void endLuminosityBlock(edm::LuminosityBlock const &, edm::EventSetup const &);
-
+                //GEN
+                HZZ4LGENAna genAna;
 		// ----------member data ---------------------------
 		std::string file_name;
                 std::string triggersPassed;
@@ -151,6 +157,7 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 
 		TH1F* myDimuonMass_all;
  		TH1F* myY1SFitMass_all;
+                TH1F* Total_events;
                 int Total_events_analyzed;
 	        int Total_events_analyzed_triggered;
 	        int Total_events_dimuon;
@@ -252,22 +259,34 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		Float_t fourMuFit_VtxProb_mix3evts;
 		TLorentzVector fourMuFit_p4_mix3evts;
 
-		std::vector<Float_t> genbkg_mu1_Pt;
-		std::vector<Float_t> genbkg_mu1_Eta;
-		std::vector<Float_t> genbkg_mu1_Phi;
-		std::vector<Float_t> genbkg_mu1_Mass;
-		std::vector<Float_t> genbkg_mu2_Pt;
-		std::vector<Float_t> genbkg_mu2_Eta;
-		std::vector<Float_t> genbkg_mu2_Phi;
-		std::vector<Float_t> genbkg_mu2_Mass;
-		std::vector<Float_t> genbkg_mu3_Pt;
-		std::vector<Float_t> genbkg_mu3_Eta;
-		std::vector<Float_t> genbkg_mu3_Phi;
-		std::vector<Float_t> genbkg_mu3_Mass;
-		std::vector<Float_t> genbkg_mu4_Pt;
-		std::vector<Float_t> genbkg_mu4_Eta;
-		std::vector<Float_t> genbkg_mu4_Phi;
-		std::vector<Float_t> genbkg_mu4_Mass;
+                // -------------------------
+                // GEN level information
+                // -------------------------
+                // Event variables
+                int GENfinalState;
+                bool passedFiducialSelection;
+                std::vector<double> GENmu_pt; std::vector<double> GENmu_eta; std::vector<double> GENmu_phi; std::vector<double> GENmu_mass; 
+                std::vector<int> GENmu_id; std::vector<int> GENmu_status; 
+                std::vector<int> GENmu_MomId; std::vector<int> GENmu_MomMomId;
+                int GENlep_Xindex[4];
+                std::vector<int> GENups_DaughtersId;
+                std::vector<double> GENups_Daughter_mupt;
+                std::vector<double> GENups_Daughter_mueta;
+                std::vector<double> GENups_Daughter_muphi;
+                std::vector<double> GENups_Daughter_mumass;
+                std::vector<double> GENups_Daughter_mustatus;
+                std::vector<int> GENups_Daughter_muid;
+                std::vector<int> GENups_MomId;
+                std::vector<double> GENups_pt;
+                std::vector<double> GENups_eta;
+                std::vector<double> GENups_y;
+                std::vector<double> GENups_phi;
+                std::vector<double> GENups_mass;
+                std::vector<double> GENX_mass;
+                std::vector<double> GENX_pt;
+                std::vector<double> GENX_eta;
+                std::vector<double> GENX_y;
+                std::vector<double> GENX_phi;
 		std::vector<Float_t> fourMuFit_Mass_allComb;
 		std::vector<Float_t> fourMuFit_Mass;
 		std::vector<Float_t> fourMuFit_MassErr;
@@ -534,8 +553,9 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		TLorentzVector gen_dimuon_p4;
 		TLorentzVector gen_mu1_p4;
 		TLorentzVector gen_mu2_p4;
-		edm::EDGetTokenT<reco::GenParticleCollection> genCands_;
-		edm::EDGetTokenT<pat::PackedGenParticleCollection> packCands_;
+                edm::EDGetTokenT<reco::GenParticleCollection> prunedgenParticlesSrc_;
+                //edm::EDGetTokenT<pat::PackedGenParticle> packedgenParticlesSrc_;
+               // Counters
 };
 
 //
@@ -674,24 +694,33 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("fourMuFit_Mass_mix3evts",&fourMuFit_Mass_mix3evts,"fourMuFit_Mass_mix3evts/F");
 		onia_tree->Branch("fourMuFit_VtxProb_mix3evts",&fourMuFit_VtxProb_mix3evts,"fourMuFit_VtxProb_mix3evts/F");
 		onia_tree->Branch("fourMuFit_p4_mix3evts",  "TLorentzVector", &fourMuFit_p4_mix3evts);
-
-		gen_tree->Branch("genbkg_mu1_Pt",&genbkg_mu1_Pt);
-		gen_tree->Branch("genbkg_mu1_Eta",&genbkg_mu1_Eta);
-		gen_tree->Branch("genbkg_mu1_Phi",&genbkg_mu1_Phi);
-		gen_tree->Branch("genbkg_mu1_Mass",&genbkg_mu1_Mass);
-		gen_tree->Branch("genbkg_mu2_Pt",&genbkg_mu2_Pt);
-		gen_tree->Branch("genbkg_mu2_Eta",&genbkg_mu2_Eta);
-		gen_tree->Branch("genbkg_mu2_Phi",&genbkg_mu2_Phi);
-		gen_tree->Branch("genbkg_mu2_Mass",&genbkg_mu2_Mass);
-		gen_tree->Branch("genbkg_mu3_Pt",&genbkg_mu3_Pt);
-		gen_tree->Branch("genbkg_mu3_Eta",&genbkg_mu3_Eta);
-		gen_tree->Branch("genbkg_mu3_Phi",&genbkg_mu3_Phi);
-		gen_tree->Branch("genbkg_mu3_Mass",&genbkg_mu3_Mass);
-		gen_tree->Branch("genbkg_mu4_Pt",&genbkg_mu4_Pt);
-		gen_tree->Branch("genbkg_mu4_Eta",&genbkg_mu4_Eta);
-		gen_tree->Branch("genbkg_mu4_Phi",&genbkg_mu4_Phi);
-		gen_tree->Branch("genbkg_mu4_Mass",&genbkg_mu4_Mass);
-
+                gen_tree->Branch("GENfinalState",&GENfinalState,"GENfinalState/I");
+                gen_tree->Branch("passedFiducialSelection",&passedFiducialSelection,"passedFiducialSelection/O");
+                gen_tree->Branch("GENmu_pt",&GENmu_pt);
+                gen_tree->Branch("GENmu_eta",&GENmu_eta);
+                gen_tree->Branch("GENmu_phi",&GENmu_phi);
+                gen_tree->Branch("GENmu_mass",&GENmu_mass);
+                gen_tree->Branch("GENmu_id",&GENmu_id);
+                gen_tree->Branch("GENmu_status",&GENmu_status);
+                gen_tree->Branch("GENmu_MomId",&GENmu_MomId);
+                gen_tree->Branch("GENmu_MomMomId",&GENmu_MomMomId);
+                gen_tree->Branch("GENups_DaughtersId",&GENups_DaughtersId);
+                gen_tree->Branch("GENups_Daughter_mupt",&GENups_Daughter_mupt);
+                gen_tree->Branch("GENups_Daughter_mueta",&GENups_Daughter_mueta);
+                gen_tree->Branch("GENups_Daughter_muphi",&GENups_Daughter_muphi);
+                gen_tree->Branch("GENups_Daughter_mumass",&GENups_Daughter_mumass);
+                gen_tree->Branch("GENups_Daughter_mustatus",&GENups_Daughter_mustatus);
+                gen_tree->Branch("GENups_MomId",&GENups_MomId);
+                gen_tree->Branch("GENups_pt",&GENups_pt);
+                gen_tree->Branch("GENups_eta",&GENups_eta);
+                gen_tree->Branch("GENups_y",&GENups_y);
+                gen_tree->Branch("GENups_phi",&GENups_phi);
+                gen_tree->Branch("GENups_mass",&GENups_mass);
+                gen_tree->Branch("GENX_mass",&GENX_mass);
+                gen_tree->Branch("GENX_pt",&GENX_pt);
+                gen_tree->Branch("GENX_eta",&GENX_eta);
+                gen_tree->Branch("GENX_y",&GENX_y);
+                gen_tree->Branch("GENX_phi",&GENX_phi);
 		onia_tree->Branch("fourMuFit_Mass_allComb",&fourMuFit_Mass_allComb);
 		onia_tree->Branch("fourMuFit_Mass",&fourMuFit_Mass);
 		onia_tree->Branch("fourMuFit_MassErr",&fourMuFit_MassErr);
@@ -935,11 +964,13 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("gen_mu1_p4",  "TLorentzVector",  &gen_mu1_p4);
 		onia_tree->Branch("gen_mu2_p4",  "TLorentzVector",  &gen_mu2_p4);
 	}
-	genCands_ = consumes<reco::GenParticleCollection>((edm::InputTag)"prunedGenParticles");
-	packCands_ = consumes<pat::PackedGenParticleCollection>((edm::InputTag)"packedGenParticles");
-	//genCands_= consumes<reco::GenParticleCollection>((edm::InputTag)"genMuons");
+	prunedgenParticlesSrc_ = consumes<reco::GenParticleCollection>((edm::InputTag)"prunedGenParticles");
+	//packedgenParticlesSrc_ = consumes<pat::PackedGenParticle>((edm::InputTag)"packedGenParticles");
+   //prunedgenParticlesSrc_(consumes<reco::GenParticleCollection>(iConfig.getUntrackedParameter<edm::InputTag>("prunedgenParticlesSrc"))),
+   // packedgenParticlesSrc_(consumes<edm::View<pat::PackedGenParticle> >(iConfig.getUntrackedParameter<edm::InputTag>("packedgenParticlesSrc"))),
 
-	TFileDirectory hists = fs->mkdir( "hists" );
+        Total_events = fs->make<TH1F>("Total_events","nEvents in Sample",2,0,2);
+/*
 	myFourMuM_fit = hists.make<TH1F>("myFourMuM_fit","myFourMuM_fit",50000,0,500.0);
 	myFourMuM_fit->GetXaxis()->SetTitle("m_{#mu^{+}#mu^{-}#mu^{+}#mu^{-}} [GeV/c^{2}]");
 	myFourMuVtxP_fit = hists.make<TH1F>("myFourMuVtxP_fit","myFourMuVtxP_fit",1000,0,1);
@@ -948,6 +979,7 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 	myDimuonMass_all->GetXaxis()->SetTitle("m_{#mu^{+}#mu^{-}} [GeV/c^{2}]");
 	myY1SFitMass_all = hists.make<TH1F>("myY1SFitMass_all","myY1SFitMass_all",2000,0,20.0);
 	myY1SFitMass_all->GetXaxis()->SetTitle("m_{#mu^{+}#mu^{-}} [GeV/c^{2}]");
+*/
 }
 
 MuMuGammaRootupler::~MuMuGammaRootupler() {
@@ -1713,25 +1745,33 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	fourMuFit_Mass_mix3evts = -1;
 	fourMuFit_VtxProb_mix3evts = -1;
 	fourMuFit_p4_mix3evts.SetPtEtaPhiM(0,0,0,0);
-
-	genbkg_mu1_Pt.clear();
-	genbkg_mu1_Eta.clear();
-	genbkg_mu1_Phi.clear();
-	genbkg_mu1_Mass.clear();
-	genbkg_mu2_Pt.clear();
-	genbkg_mu2_Eta.clear();
-	genbkg_mu2_Phi.clear();
-	genbkg_mu2_Mass.clear();
-	genbkg_mu3_Pt.clear();
-	genbkg_mu3_Eta.clear();
-	genbkg_mu3_Phi.clear();
-	genbkg_mu3_Mass.clear();
-	genbkg_mu4_Pt.clear();
-	genbkg_mu4_Eta.clear();
-	genbkg_mu4_Phi.clear();
-	genbkg_mu4_Mass.clear();
-
-
+        GENfinalState=-1;
+        passedFiducialSelection=false;
+        GENmu_pt.clear();
+        GENmu_eta.clear();
+        GENmu_phi.clear();
+        GENmu_mass.clear();
+        GENmu_id.clear();
+        GENmu_status.clear();
+        GENmu_MomId.clear();
+        GENmu_MomMomId.clear();
+        GENups_DaughtersId.clear();
+        GENups_Daughter_mupt.clear();
+        GENups_Daughter_mueta.clear();
+        GENups_Daughter_muphi.clear();
+        GENups_Daughter_mumass.clear();
+        GENups_Daughter_mustatus.clear();
+        GENups_MomId.clear();
+        GENups_pt.clear();
+        GENups_eta.clear();
+        GENups_y.clear();
+        GENups_phi.clear();
+        GENups_mass.clear();
+        GENX_mass.clear();
+        GENX_pt.clear();
+        GENX_eta.clear();
+        GENX_y.clear();
+        GENX_phi.clear();
 	fourMuFit_Mass_allComb.clear();
 	fourMuFit_Mass.clear();
 	fourMuFit_MassErr.clear();
@@ -1987,66 +2027,16 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
                  }
          if (verbose)cout<<"Trigger analyzed Finished"<<endl;
 
-	// Pruned particles are the one containing "important" stuff
-	edm::Handle<reco::GenParticleCollection> pruned;
-	iEvent.getByToken(genCands_, pruned);
+        edm::Handle<reco::GenParticleCollection> prunedgenParticles;
+        iEvent.getByToken(prunedgenParticlesSrc_, prunedgenParticles);
+        //edm::Handle<pat::PackedGenParticle> packedgenParticles;
+        //iEvent.getByToken(packedgenParticlesSrc_, packedgenParticles);
 
-	// Packed particles are all the status 1, so usable to remake jets
-	// The navigation from status 1 to pruned is possible (the other direction should be made by hand)
-	edm::Handle<pat::PackedGenParticleCollection> packed;
-	iEvent.getByToken(packCands_,  packed);
-
-	int nGoodGenCand = 0;
-
-	TLorentzVector gen_bkg_mu1_p4,gen_bkg_mu2_p4,gen_bkg_mu12_p4;
-	if ((isMC_ || OnlyGen_) && pruned.isValid()) {
-		std::cout<<pruned->size()<<std::endl;
-		for (size_t j=0; j<pruned->size(); j++) {
-			const reco::Candidate * d1 = &(*pruned)[j];
-			if (d1->status()!=1) continue;
-			//std::cout<<d1->pdgId()<<std::endl;
-			for (size_t k=j+1; k<pruned->size(); k++) {
-				const reco::Candidate * d2 = &(*pruned)[k];
-				if (d2->status()!=1) continue;
-				if (abs(d1->pdgId()) == 13 && abs(d2->pdgId()) == 13 && d1->pdgId()+d2->pdgId() == 0) {
-					gen_bkg_mu1_p4.SetPtEtaPhiM(d1->pt(),d1->eta(),d1->phi(),d1->mass());
-					gen_bkg_mu2_p4.SetPtEtaPhiM(d2->pt(),d2->eta(),d2->phi(),d2->mass());
-					gen_bkg_mu12_p4=gen_bkg_mu1_p4+gen_bkg_mu2_p4;
-				}
-				if (gen_bkg_mu12_p4.M()<9.2 || gen_bkg_mu12_p4.M()>9.7) continue;
-				for (size_t l=0; l<pruned->size(); l++) {
-					if  (l==j || l==k) continue;
-					const reco::Candidate * d3 = &(*pruned)[l]; 
-					if (d3->status()!=1) continue;
-					for (size_t m=l+1; m<pruned->size(); m++) {
-						if (m==j || m==k) continue;
-						const reco::Candidate * d4 = &(*pruned)[k];
-						if (d4->status()!=1) continue;
-						if (abs(d3->pdgId()) == 13 && abs(d4->pdgId()) == 13 && d3->pdgId()+d4->pdgId() == 0) {
-							nGoodGenCand++;
-							genbkg_mu1_Pt.push_back(d1->pt());
-							genbkg_mu1_Eta.push_back(d1->eta());
-							genbkg_mu1_Phi.push_back(d1->phi());
-							genbkg_mu1_Mass.push_back(d1->mass());
-							genbkg_mu2_Pt.push_back(d2->pt());
-							genbkg_mu2_Eta.push_back(d2->eta());
-							genbkg_mu2_Phi.push_back(d2->phi());
-							genbkg_mu2_Mass.push_back(d2->mass());
-							genbkg_mu3_Pt.push_back(d3->pt());
-							genbkg_mu3_Eta.push_back(d3->eta());
-							genbkg_mu3_Phi.push_back(d3->phi());
-							genbkg_mu3_Mass.push_back(d3->mass());
-							genbkg_mu4_Pt.push_back(d4->pt());
-							genbkg_mu4_Eta.push_back(d4->eta());
-							genbkg_mu4_Phi.push_back(d4->phi());
-							genbkg_mu4_Mass.push_back(d4->mass());
-						}
-					}
-				}
-			}
-		}
+	if ((isMC_ || OnlyGen_) && prunedgenParticles.isValid()) {
+        if (verbose) cout<<"setting gen variables"<<endl;    
+        setGENVariables(prunedgenParticles);
 	}
-	if (isMC_ && nGoodGenCand>0) gen_tree->Fill();
+	if (isMC_) gen_tree->Fill();
 
 
 	/*
@@ -2323,7 +2313,8 @@ void MuMuGammaRootupler::endJob() {
 	cout<<"Total_events_analyzed_triggered: "<<Total_events_analyzed_triggered<<endl;
 	cout<<"Total_events_dimuon_trg_matched: "<<Total_events_dimuon_trg_matched<<endl;
         cout<<"Total_events_Fourmuon: " <<Total_events_Fourmuon<<endl;
-	}
+        }
+        Total_events->SetBinContent(1,Total_events_analyzed);
 			
 }
 // ------------ method called when ending the processing of a run  ------------
@@ -2616,6 +2607,65 @@ int MuMuGammaRootupler::fourMuonMixFit(pat::CompositeCandidate dimuonCand, edm::
 	}
 	return nGoodFourMuonMix;
 }
+//void MuMuGammaRootupler::setGENVariables(edm::Handle<reco::GenParticleCollection> prunedgenParticles, edm::Handle<pat::PackedGenParticle> packedgenParticles){
+void MuMuGammaRootupler::setGENVariables(edm::Handle<reco::GenParticleCollection> prunedgenParticles){
+    reco::GenParticleCollection::const_iterator genPart;
+    int j = -1;
+    int nGENMuons=0;
+    if (verbose) cout<<"begin looping on gen particles"<<endl;
+    for(genPart = prunedgenParticles->begin(); genPart != prunedgenParticles->end(); genPart++) {
+        j++;
+        if (abs(genPart->pdgId())==13) {
+        if (!(genPart->status()==1)) continue; // only allow status 1 gen muons
+        if (!(genAna.MotherID(&prunedgenParticles->at(j))==23)) continue; 
+        nGENMuons++;
+        if (verbose) cout<<"found a gen muon: id "<<genPart->pdgId()<<" pt: "<<genPart->pt()<<" eta: "<<genPart->eta()<<endl;
+           GENmu_id.push_back(genPart->pdgId() );
+           GENmu_status.push_back(genPart->status());
+           GENmu_pt.push_back(genPart->pt());
+           GENmu_eta.push_back(genPart->eta());
+           GENmu_phi.push_back(genPart->phi());
+           GENmu_mass.push_back(genPart->mass());
+           GENmu_MomId.push_back(genAna.MotherID(&prunedgenParticles->at(j)));
+           GENmu_MomMomId.push_back(genAna.MotherMotherID(&prunedgenParticles->at(j))); 
+             } // end Gen muons
+           if (genPart->pdgId()==25) {
+            GENX_pt.push_back(genPart->pt());
+            GENX_eta.push_back(genPart->eta());
+            GENX_y.push_back(genPart->rapidity());
+            GENX_phi.push_back(genPart->phi());
+            GENX_mass.push_back(genPart->mass());
+             }
+             if (verbose) cout<<"genPart id : "<<genPart->pdgId() << " status: "<<genPart->status()<<endl;
+            if ((genPart->pdgId()==23) && (genPart->status()>=20 && genPart->status()<30) ) {
+            const reco::Candidate *ups_dau0=genPart->daughter(0);
+            int ups_dauId = fabs(ups_dau0->pdgId());
+            if (verbose) cout<<"Ups daughter : "<<ups_dauId<<endl;
+                int ndau = genPart->numberOfDaughters();
+                if (verbose) cout<<"Ups daughter size: "<<ndau<<endl;
+                for (int d=0; d<ndau; d++) {
+                    const reco::Candidate *ups_dau=genPart->daughter(d);
+                    if (fabs(ups_dau->pdgId()) == 13) {
+                        ups_dauId = fabs(ups_dau->pdgId());
+                        if (verbose) cout<<"ups Dau: "<<d<<" id: "<<fabs(ups_dau->pdgId())<<" status: "<<ups_dau->status() <<endl;
+                        GENups_DaughtersId.push_back(fabs(ups_dau->pdgId()));
+                        GENups_Daughter_mupt.push_back(ups_dau->pt());
+                        GENups_Daughter_mueta.push_back(ups_dau->eta());
+                        GENups_Daughter_muphi.push_back(ups_dau->rapidity());
+                        GENups_Daughter_mumass.push_back(ups_dau->phi());
+                        GENups_Daughter_mustatus.push_back(ups_dau->status());
+                        GENups_Daughter_muid.push_back(ups_dau->mass());
+                    }
+                }
+            GENups_MomId.push_back(genAna.MotherID(&prunedgenParticles->at(j)));                
+            GENups_pt.push_back(genPart->pt());
+            GENups_eta.push_back(genPart->eta());
+            GENups_y.push_back(genPart->rapidity());
+            GENups_phi.push_back(genPart->phi());
+            GENups_mass.push_back(genPart->mass());
+                } 
+              }// finish loop on prunedgenParticles
+            } // finished Gen variables 
 void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV){
     std::vector<pat::Muon> AllMuons;
     vector<RefCountedKinematicTree> Chi;
