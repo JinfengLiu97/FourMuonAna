@@ -334,18 +334,22 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
                 std::vector<Float_t> mu1_Eta;
                 std::vector<Float_t> mu1_Phi;
                 std::vector<Float_t> mu1_E;
+                std::vector<int> mu1_genindex;
                 std::vector<Float_t> mu2_Pt;
                 std::vector<Float_t> mu2_Eta;
                 std::vector<Float_t> mu2_Phi;
                 std::vector<Float_t> mu2_E;
+                std::vector<int> mu2_genindex;
 		std::vector<Float_t> mu3_Pt;
 		std::vector<Float_t> mu3_Eta;
 		std::vector<Float_t> mu3_Phi;
 		std::vector<Float_t> mu3_E;
 		std::vector<Float_t> mu4_Pt;
+                std::vector<int> mu3_genindex;
 		std::vector<Float_t> mu4_Eta;
 		std::vector<Float_t> mu4_Phi;
 		std::vector<Float_t> mu4_E;
+                std::vector<int> mu4_genindex;
                 std::vector<Int_t> mu1Charge;
                 std::vector<Int_t> mu2Charge;
 		std::vector<Int_t> mu3Charge;
@@ -546,7 +550,7 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
                 int lastTriggerModule;
                 HLTConfigProvider hltConfig_;
 		TTree *onia_tree;
-		TTree *gen_tree;
+		//TTree *gen_tree;
 
 		Int_t mother_pdgId;
 		Int_t dimuon_pdgId;
@@ -589,7 +593,7 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 {
 	edm::Service < TFileService > fs;
 	onia_tree = fs->make < TTree > ("oniaTree", "Tree of MuMuGamma");
-	gen_tree = fs->make < TTree > ("genTree", "Tree of genCand");
+	//gen_tree = fs->make < TTree > ("genTree", "Tree of genCand");
         Total_events_analyzed = 0;
 	Total_events_analyzed_triggered = 0 ;
 	Total_events_dimuon= 0;
@@ -694,33 +698,33 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("fourMuFit_Mass_mix3evts",&fourMuFit_Mass_mix3evts,"fourMuFit_Mass_mix3evts/F");
 		onia_tree->Branch("fourMuFit_VtxProb_mix3evts",&fourMuFit_VtxProb_mix3evts,"fourMuFit_VtxProb_mix3evts/F");
 		onia_tree->Branch("fourMuFit_p4_mix3evts",  "TLorentzVector", &fourMuFit_p4_mix3evts);
-                gen_tree->Branch("GENfinalState",&GENfinalState,"GENfinalState/I");
-                gen_tree->Branch("passedFiducialSelection",&passedFiducialSelection,"passedFiducialSelection/O");
-                gen_tree->Branch("GENmu_pt",&GENmu_pt);
-                gen_tree->Branch("GENmu_eta",&GENmu_eta);
-                gen_tree->Branch("GENmu_phi",&GENmu_phi);
-                gen_tree->Branch("GENmu_mass",&GENmu_mass);
-                gen_tree->Branch("GENmu_id",&GENmu_id);
-                gen_tree->Branch("GENmu_status",&GENmu_status);
-                gen_tree->Branch("GENmu_MomId",&GENmu_MomId);
-                gen_tree->Branch("GENmu_MomMomId",&GENmu_MomMomId);
-                gen_tree->Branch("GENups_DaughtersId",&GENups_DaughtersId);
-                gen_tree->Branch("GENups_Daughter_mupt",&GENups_Daughter_mupt);
-                gen_tree->Branch("GENups_Daughter_mueta",&GENups_Daughter_mueta);
-                gen_tree->Branch("GENups_Daughter_muphi",&GENups_Daughter_muphi);
-                gen_tree->Branch("GENups_Daughter_mumass",&GENups_Daughter_mumass);
-                gen_tree->Branch("GENups_Daughter_mustatus",&GENups_Daughter_mustatus);
-                gen_tree->Branch("GENups_MomId",&GENups_MomId);
-                gen_tree->Branch("GENups_pt",&GENups_pt);
-                gen_tree->Branch("GENups_eta",&GENups_eta);
-                gen_tree->Branch("GENups_y",&GENups_y);
-                gen_tree->Branch("GENups_phi",&GENups_phi);
-                gen_tree->Branch("GENups_mass",&GENups_mass);
-                gen_tree->Branch("GENX_mass",&GENX_mass);
-                gen_tree->Branch("GENX_pt",&GENX_pt);
-                gen_tree->Branch("GENX_eta",&GENX_eta);
-                gen_tree->Branch("GENX_y",&GENX_y);
-                gen_tree->Branch("GENX_phi",&GENX_phi);
+                onia_tree->Branch("GENfinalState",&GENfinalState,"GENfinalState/I");
+                onia_tree->Branch("passedFiducialSelection",&passedFiducialSelection,"passedFiducialSelection/O");
+                onia_tree->Branch("GENmu_pt",&GENmu_pt);
+                onia_tree->Branch("GENmu_eta",&GENmu_eta);
+                onia_tree->Branch("GENmu_phi",&GENmu_phi);
+                onia_tree->Branch("GENmu_mass",&GENmu_mass);
+                onia_tree->Branch("GENmu_id",&GENmu_id);
+                onia_tree->Branch("GENmu_status",&GENmu_status);
+                onia_tree->Branch("GENmu_MomId",&GENmu_MomId);
+                onia_tree->Branch("GENmu_MomMomId",&GENmu_MomMomId);
+                onia_tree->Branch("GENups_DaughtersId",&GENups_DaughtersId);
+                onia_tree->Branch("GENups_Daughter_mupt",&GENups_Daughter_mupt);
+                onia_tree->Branch("GENups_Daughter_mueta",&GENups_Daughter_mueta);
+                onia_tree->Branch("GENups_Daughter_muphi",&GENups_Daughter_muphi);
+                onia_tree->Branch("GENups_Daughter_mumass",&GENups_Daughter_mumass);
+                onia_tree->Branch("GENups_Daughter_mustatus",&GENups_Daughter_mustatus);
+                onia_tree->Branch("GENups_MomId",&GENups_MomId);
+                onia_tree->Branch("GENups_pt",&GENups_pt);
+                onia_tree->Branch("GENups_eta",&GENups_eta);
+                onia_tree->Branch("GENups_y",&GENups_y);
+                onia_tree->Branch("GENups_phi",&GENups_phi);
+                onia_tree->Branch("GENups_mass",&GENups_mass);
+                onia_tree->Branch("GENX_mass",&GENX_mass);
+                onia_tree->Branch("GENX_pt",&GENX_pt);
+                onia_tree->Branch("GENX_eta",&GENX_eta);
+                onia_tree->Branch("GENX_y",&GENX_y);
+                onia_tree->Branch("GENX_phi",&GENX_phi);
 		onia_tree->Branch("fourMuFit_Mass_allComb",&fourMuFit_Mass_allComb);
 		onia_tree->Branch("fourMuFit_Mass",&fourMuFit_Mass);
 		onia_tree->Branch("fourMuFit_MassErr",&fourMuFit_MassErr);
@@ -768,18 +772,22 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("mu1_Eta",  &mu1_Eta);
                 onia_tree->Branch("mu1_Phi",  &mu1_Phi);
                 onia_tree->Branch("mu1_E",    &mu1_E);
+                onia_tree->Branch("mu1_genindex",   &mu1_genindex);
                 onia_tree->Branch("mu2_Pt",   &mu2_Pt);
                 onia_tree->Branch("mu2_Eta",  &mu2_Eta);
                 onia_tree->Branch("mu2_Phi",  &mu2_Phi);
                 onia_tree->Branch("mu2_E",    &mu2_E);
+                onia_tree->Branch("mu2_genindex",   &mu2_genindex);
 		onia_tree->Branch("mu3_Pt",   &mu3_Pt);
 		onia_tree->Branch("mu3_Eta",  &mu3_Eta);
 		onia_tree->Branch("mu3_Phi",  &mu3_Phi);
 		onia_tree->Branch("mu3_E",    &mu3_E);
+                onia_tree->Branch("mu3_genindex",   &mu3_genindex);
 		onia_tree->Branch("mu4_Pt",   &mu4_Pt);
 		onia_tree->Branch("mu4_Eta",  &mu4_Eta);
 		onia_tree->Branch("mu4_Phi",  &mu4_Phi);
 		onia_tree->Branch("mu4_E",    &mu4_E);
+                onia_tree->Branch("mu4_genindex",   &mu4_genindex);
                 onia_tree->Branch("mu1Charge", &mu1Charge);
                 onia_tree->Branch("mu2Charge",   &mu2Charge);
 		onia_tree->Branch("mu3Charge", &mu3Charge);
@@ -1816,18 +1824,22 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
         mu1_Eta.clear();
         mu1_Phi.clear();
         mu1_E.clear();
+        mu1_genindex.clear();
         mu2_Pt.clear();
         mu2_Eta.clear();
         mu2_Phi.clear();
         mu2_E.clear();
+        mu2_genindex.clear();
 	mu3_Pt.clear();
 	mu3_Eta.clear();
 	mu3_Phi.clear();
 	mu3_E.clear();
+        mu3_genindex.clear();
 	mu4_Pt.clear();
 	mu4_Eta.clear();
 	mu4_Phi.clear();
 	mu4_E.clear();
+        mu4_genindex.clear();
 	mu3_d0.clear();
 	mu3_d0err.clear();
 	mu4_d0.clear();
@@ -2036,7 +2048,7 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
         if (verbose) cout<<"setting gen variables"<<endl;    
         setGENVariables(prunedgenParticles);
 	}
-	if (isMC_) gen_tree->Fill();
+	//if (isMC_) gen_tree->Fill();
 
 
 	/*
@@ -2678,6 +2690,28 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
             AllMuons.push_back(*recomu);
                   } // loop all reco muons
         if (verbose) cout << "All Soft muons size: " <<AllMuons.size()<<endl;
+      // GEN matching of muons
+      int mu_genindex[AllMuons.size()];
+      if (isMC_)
+      {
+       if (verbose) cout<<"begin gen matching"<<endl;
+        // for each reco lepton find the nearest gen lepton with same ID
+       for (unsigned int i = 0; i < AllMuons.size(); i++){
+           double minDr=9999.0;
+           TLorentzVector reco, gen;
+           reco.SetPtEtaPhiM(AllMuons[i].pt(),AllMuons[i].eta(),AllMuons[i].phi(),AllMuons[i].mass());
+           for (unsigned int j = 0; j < GENmu_id.size(); j++)
+              {
+                   gen.SetPtEtaPhiM(GENmu_pt[j],GENmu_eta[j],GENmu_phi[j],GENmu_mass[j]);
+                   double thisDr = deltaR(reco.Eta(),reco.Phi(),gen.Eta(),gen.Phi());
+                   if (thisDr<minDr && thisDr<0.5) {
+                        mu_genindex[i]=j;
+                        minDr=thisDr;
+                        }
+                    if (verbose) cout<<"Reco lepton with pT: "<<reco.Pt()<<" matched to gen lepton: "<<gen.Pt()<<" deltaR: "<<minDr<<endl;
+                    } // loop over gen muons
+                } // loope over all reco leptons
+       } // finish GEN matching of muons
         // start Loop over all reco soft muons and make all dimuon candidates
         double N_muons = AllMuons.size();
         if (N_muons < 4 ) return;
@@ -2953,7 +2987,10 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            mu2Charge.push_back(AllMuons[i2].charge());
            mu3Charge.push_back(AllMuons[j1].charge());
            mu4Charge.push_back(AllMuons[j2].charge());
-
+           mu1_genindex.push_back(mu_genindex[i1]);
+           mu2_genindex.push_back(mu_genindex[i2]);
+           mu3_genindex.push_back(mu_genindex[j1]);
+           mu4_genindex.push_back(mu_genindex[j2]);
            mu1_Soft.push_back(muon::isSoftMuon(AllMuons[i1], thePrimaryV));
            mu2_Soft.push_back(muon::isSoftMuon(AllMuons[i2], thePrimaryV));
            mu3_Soft.push_back(muon::isSoftMuon(AllMuons[j1], thePrimaryV));
