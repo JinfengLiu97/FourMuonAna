@@ -784,5 +784,4 @@ void HZZ4LGENAna::printDecayList(edm::Handle<reco::GenParticleCollection> partic
 	cout << out.str();
 }
 
-
 #endif

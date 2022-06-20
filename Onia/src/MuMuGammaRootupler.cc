@@ -10,7 +10,8 @@
 
 // system include files
 #include <memory>
-
+//#include "../interface/MultiLepPAT.h"
+#include "../interface/VertexReProducer.h"
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
@@ -110,6 +111,8 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		int fourMuonMixFit(pat::CompositeCandidate dimuonCand, edm::Handle< edm::View<pat::Muon> > muons, std::vector<pat::Muon> muons_previous, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
 		int fourMuonMixFit(pat::CompositeCandidate dimuonCand, edm::Handle< edm::View<pat::Muon> > muons, std::vector<pat::Muon> muons_previous1, std::vector<pat::Muon> muons_previous2, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);      
 		void fourMuonFit_bestYMass(pat::CompositeCandidate dimuonCand, RefCountedKinematicTree treeupsilon_part1, edm::Handle< edm::View<pat::Muon> > muons, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
+                double GetcTau(RefCountedKinematicVertex& decayVrtx, RefCountedKinematicParticle& kinePart, Vertex& bs);
+                double GetcTauErr(RefCountedKinematicVertex& decayVrtx, RefCountedKinematicParticle& kinePart, Vertex& bs);
 		int  fourMuonMixFit_bestYMass(pat::CompositeCandidate dimuonCand, edm::Handle< edm::View<pat::Muon> > muons, std::vector<pat::Muon> muons_previous, edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV);
                //Stand Alone Function for YY
                 void YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muons,edm::ESHandle<MagneticField> bFieldHandle, reco::BeamSpot bs, reco::Vertex thePrimaryV,edm::Handle<reco::VertexCollection>);
@@ -225,6 +228,10 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
 		std::vector<Float_t> v_mumufit_VtxCL;
                 std::vector<Float_t> v_mumufit_VtxCL_noMC;
 		std::vector<Float_t> v_mumufit_VtxCL2;
+                std::vector<Float_t> v_mumufit_cTau_noMC;
+                std::vector<Float_t> v_mumufit_cTau_MC;
+                std::vector<Float_t> v_mumufit_cTauErr_noMC;
+                std::vector<Float_t> v_mumufit_cTauErr_MC;
 		std::vector<Double_t> v_mumufit_DecayVtxX;
 		std::vector<Double_t> v_mumufit_DecayVtxY;
 		std::vector<Double_t> v_mumufit_DecayVtxZ;
@@ -365,6 +372,14 @@ class MuMuGammaRootupler:public edm::EDAnalyzer {
                 std::vector<Float_t> fourMuFit_ups2_VtxProb_noMC;
                 std::vector<Float_t> fourMuFit_ups1_mass;
                 std::vector<Float_t> fourMuFit_ups2_mass;
+                std::vector<Float_t> fourMuFit_ups1_cTau_noMC;
+                std::vector<Float_t> fourMuFit_ups2_cTau_noMC;
+                std::vector<Float_t> fourMuFit_ups1_cTau_MC;
+                std::vector<Float_t> fourMuFit_ups2_cTau_MC;
+                std::vector<Float_t> fourMuFit_ups1_cTauErr_noMC;
+                std::vector<Float_t> fourMuFit_ups2_cTauErr_noMC;
+                std::vector<Float_t> fourMuFit_ups1_cTauErr_MC;
+                std::vector<Float_t> fourMuFit_ups2_cTauErr_MC;
                 std::vector<Float_t> fourMuFit_ups1_pt;
                 std::vector<Float_t> fourMuFit_ups2_pt;
                 std::vector<Float_t> fourMuFit_ups1_rapidity;
@@ -753,6 +768,10 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
 		onia_tree->Branch("v_mumufit_VtxCL",&v_mumufit_VtxCL);
                 onia_tree->Branch("v_mumufit_VtxCL_noMC",&v_mumufit_VtxCL_noMC);
 		onia_tree->Branch("v_mumufit_VtxCL2",&v_mumufit_VtxCL2);
+                onia_tree->Branch("v_mumufit_cTau_noMC",&v_mumufit_cTau_noMC);
+                onia_tree->Branch("v_mumufit_cTau_MC",&v_mumufit_cTau_MC);
+                onia_tree->Branch("v_mumufit_cTauErr_noMC",&v_mumufit_cTauErr_noMC);
+                onia_tree->Branch("v_mumufit_cTauErr_MC",&v_mumufit_cTauErr_MC);
 		onia_tree->Branch("v_mumufit_DecayVtxX",&v_mumufit_DecayVtxX);
 		onia_tree->Branch("v_mumufit_DecayVtxY",&v_mumufit_DecayVtxY);
 		onia_tree->Branch("v_mumufit_DecayVtxZ",&v_mumufit_DecayVtxZ);
@@ -886,6 +905,14 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("fourMuFit_ups2_mass",&fourMuFit_ups2_mass);
                 onia_tree->Branch("fourMuFit_ups1_massError",&fourMuFit_ups1_massError);
                 onia_tree->Branch("fourMuFit_ups2_massError",&fourMuFit_ups2_massError);
+                onia_tree->Branch("fourMuFit_ups1_cTau_noMC",&fourMuFit_ups1_cTau_noMC);
+                onia_tree->Branch("fourMuFit_ups2_cTau_noMC",&fourMuFit_ups2_cTau_noMC);
+                onia_tree->Branch("fourMuFit_ups1_cTau_noMC",&fourMuFit_ups1_cTau_MC);
+                onia_tree->Branch("fourMuFit_ups2_cTau_noMC",&fourMuFit_ups2_cTau_MC);
+                onia_tree->Branch("fourMuFit_ups1_cTauErr_noMC",&fourMuFit_ups1_cTauErr_noMC);
+                onia_tree->Branch("fourMuFit_ups2_cTauErr_noMC",&fourMuFit_ups2_cTauErr_noMC);
+                onia_tree->Branch("fourMuFit_ups1_cTauErr_noMC",&fourMuFit_ups1_cTauErr_MC);
+                onia_tree->Branch("fourMuFit_ups2_cTauErr_noMC",&fourMuFit_ups2_cTauErr_MC);
                 onia_tree->Branch("fourMuFit_ups1_VtxX",&fourMuFit_ups1_VtxX);
                 onia_tree->Branch("fourMuFit_ups1_VtxY",&fourMuFit_ups1_VtxY);
                 onia_tree->Branch("fourMuFit_ups1_VtxZ",&fourMuFit_ups1_VtxZ);
@@ -1879,6 +1906,10 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
 	v_mumufit_VtxCL.clear();
         v_mumufit_VtxCL_noMC.clear();
 	v_mumufit_VtxCL2.clear();
+        v_mumufit_cTau_noMC.clear();
+        v_mumufit_cTau_MC.clear();
+        v_mumufit_cTauErr_noMC.clear();
+        v_mumufit_cTauErr_MC.clear();
 	v_mumufit_DecayVtxX.clear();
 	v_mumufit_DecayVtxY.clear();
 	v_mumufit_DecayVtxZ.clear();
@@ -2017,6 +2048,14 @@ void MuMuGammaRootupler::analyze(const edm::Event & iEvent, const edm::EventSetu
         fourMuFit_ups2_mass.clear();
         fourMuFit_ups1_massError.clear();
         fourMuFit_ups2_massError.clear();
+        fourMuFit_ups1_cTau_noMC.clear();
+        fourMuFit_ups2_cTau_noMC.clear(); 
+        fourMuFit_ups1_cTau_MC.clear();
+        fourMuFit_ups2_cTau_MC.clear();
+        fourMuFit_ups1_cTauErr_noMC.clear();
+        fourMuFit_ups2_cTauErr_noMC.clear();
+        fourMuFit_ups1_cTauErr_MC.clear();
+        fourMuFit_ups2_cTauErr_MC.clear();
         fourMuFit_ups1_VtxX.clear();
         fourMuFit_ups1_VtxY.clear();
         fourMuFit_ups1_VtxZ.clear();
@@ -3219,6 +3258,10 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
             v_mumufit_VtxCL.push_back(thisdimuon_vtxprob);
             v_mumufit_VtxCL_noMC.push_back(thisdimuon_vtxprob_noMC);
             v_mumufit_VtxCL2.push_back( mumu_vFit_vertex_noMC->chiSquared() );
+            v_mumufit_cTau_noMC.push_back((GetcTau(mumu_vFit_vertex_noMC,mumu_vFit_noMC,thePrimaryV)));
+            v_mumufit_cTau_MC.push_back((GetcTau(mumu_vFit_vertex_MC,mumu_vFit_MC,thePrimaryV)));
+            v_mumufit_cTauErr_noMC.push_back((GetcTauErr(mumu_vFit_vertex_noMC,mumu_vFit_noMC,thePrimaryV)));
+            v_mumufit_cTauErr_MC.push_back((GetcTauErr(mumu_vFit_vertex_MC,mumu_vFit_MC,thePrimaryV)));
             v_mumufit_DecayVtxX.push_back( mumu_vFit_vertex_noMC->position().x() );
             v_mumufit_DecayVtxY.push_back( mumu_vFit_vertex_noMC->position().y() );
             v_mumufit_DecayVtxZ.push_back( mumu_vFit_vertex_noMC->position().z() );
@@ -3408,6 +3451,14 @@ void MuMuGammaRootupler::YY_fourMuonFit(edm::Handle< edm::View<pat::Muon> > muon
            fourMuFit_ups2_mass.push_back(v_mumufit_Mass_noMC[j]);
            fourMuFit_ups1_massError.push_back(v_mumufit_MassErr_noMC[i]);
            fourMuFit_ups2_massError.push_back(v_mumufit_MassErr_noMC[j]);
+           fourMuFit_ups1_cTau_noMC.push_back(v_mumufit_cTau_noMC[i]);
+           fourMuFit_ups2_cTau_noMC.push_back(v_mumufit_cTau_noMC[j]);
+           fourMuFit_ups1_cTau_MC.push_back(v_mumufit_cTau_MC[i]);
+           fourMuFit_ups2_cTau_MC.push_back(v_mumufit_cTau_MC[j]);
+           fourMuFit_ups1_cTauErr_noMC.push_back(v_mumufit_cTauErr_noMC[i]);
+           fourMuFit_ups2_cTauErr_noMC.push_back(v_mumufit_cTauErr_noMC[j]);
+           fourMuFit_ups1_cTauErr_MC.push_back(v_mumufit_cTauErr_MC[i]);
+           fourMuFit_ups2_cTauErr_MC.push_back(v_mumufit_cTauErr_MC[j]);
            fourMuFit_ups1_VtxX.push_back(v_mumufit_DecayVtxX[i]);
            fourMuFit_ups1_VtxY.push_back(v_mumufit_DecayVtxY[i]);
            fourMuFit_ups1_VtxZ.push_back(v_mumufit_DecayVtxZ[i]);
@@ -4218,7 +4269,37 @@ void MuMuGammaRootupler::fourMuonFit_bestYMass(pat::CompositeCandidate dimuonCan
 		}
 	}
 }
+double MuMuGammaRootupler::GetcTau(RefCountedKinematicVertex& decayVrtx, RefCountedKinematicParticle& kinePart, Vertex& bs)
+  {     TVector3 vtx;
+    TVector3 pvtx;
+    vtx.SetXYZ((*decayVrtx).position().x(), (*decayVrtx).position().y(), 0);
+    pvtx.SetXYZ(bs.position().x(), bs.position().y(), 0);
+    VertexDistanceXY vdistXY;
+    TVector3 pperp(kinePart->currentState().globalMomentum().x(),
+                   kinePart->currentState().globalMomentum().y(), 0);
 
+    TVector3 vdiff = vtx - pvtx;
+    double cosAlpha = vdiff.Dot(pperp) / (vdiff.Perp() * pperp.Perp());
+    Measurement1D distXY = vdistXY.distance(Vertex(*decayVrtx), Vertex(bs));
+    double ctauPV = distXY.value() * cosAlpha * kinePart->currentState().mass() / pperp.Perp();
+    return ctauPV;
+  }
+double MuMuGammaRootupler::GetcTauErr(RefCountedKinematicVertex& decayVrtx, RefCountedKinematicParticle& kinePart, Vertex& bs)
+  {
+    TVector3 pperp(kinePart->currentState().globalMomentum().x(),
+                   kinePart->currentState().globalMomentum().y(), 0);
+    AlgebraicVector vpperp(3);
+    vpperp[0] = pperp.x();
+    vpperp[1] = pperp.y();
+    vpperp[2] = 0.;
+
+    GlobalError v1e = (Vertex(*decayVrtx)).error();
+    GlobalError v2e = bs.error();
+    AlgebraicSymMatrix vXYe = asHepMatrix(v1e.matrix()) + asHepMatrix(v2e.matrix());
+    double ctauErrPV = sqrt(vXYe.similarity(vpperp)) * kinePart->currentState().mass() / (pperp.Perp2());
+
+    return ctauErrPV;
+  }
 
 
 //define this as a plug-in
