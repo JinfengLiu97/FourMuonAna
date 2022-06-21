@@ -907,12 +907,12 @@ MuMuGammaRootupler::MuMuGammaRootupler(const edm::ParameterSet & iConfig):
                 onia_tree->Branch("fourMuFit_ups2_massError",&fourMuFit_ups2_massError);
                 onia_tree->Branch("fourMuFit_ups1_cTau_noMC",&fourMuFit_ups1_cTau_noMC);
                 onia_tree->Branch("fourMuFit_ups2_cTau_noMC",&fourMuFit_ups2_cTau_noMC);
-                onia_tree->Branch("fourMuFit_ups1_cTau_noMC",&fourMuFit_ups1_cTau_MC);
-                onia_tree->Branch("fourMuFit_ups2_cTau_noMC",&fourMuFit_ups2_cTau_MC);
+                onia_tree->Branch("fourMuFit_ups1_cTau_MC",&fourMuFit_ups1_cTau_MC);
+                onia_tree->Branch("fourMuFit_ups2_cTau_MC",&fourMuFit_ups2_cTau_MC);
                 onia_tree->Branch("fourMuFit_ups1_cTauErr_noMC",&fourMuFit_ups1_cTauErr_noMC);
                 onia_tree->Branch("fourMuFit_ups2_cTauErr_noMC",&fourMuFit_ups2_cTauErr_noMC);
-                onia_tree->Branch("fourMuFit_ups1_cTauErr_noMC",&fourMuFit_ups1_cTauErr_MC);
-                onia_tree->Branch("fourMuFit_ups2_cTauErr_noMC",&fourMuFit_ups2_cTauErr_MC);
+                onia_tree->Branch("fourMuFit_ups1_cTauErr_MC",&fourMuFit_ups1_cTauErr_MC);
+                onia_tree->Branch("fourMuFit_ups2_cTauErr_MC",&fourMuFit_ups2_cTauErr_MC);
                 onia_tree->Branch("fourMuFit_ups1_VtxX",&fourMuFit_ups1_VtxX);
                 onia_tree->Branch("fourMuFit_ups1_VtxY",&fourMuFit_ups1_VtxY);
                 onia_tree->Branch("fourMuFit_ups1_VtxZ",&fourMuFit_ups1_VtxZ);
